@@ -1,10 +1,15 @@
 import json
 import os
+import streamlit as st
 from openai import OpenAI
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
 def analyze_resume(resume_text: str, job_role: str = "") -> dict:
+    
+    # Get API key from streamlit secrets or environment
+    api_key = st.secrets.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
+    
+    client = OpenAI(api_key=api_key)
+    
     job_context = f"The candidate is targeting a **{job_role}** role." if job_role else ""
 
     prompt = f"""
@@ -28,13 +33,6 @@ Return ONLY valid JSON (no markdown, no explanation) with this exact structure:
   "missing_keywords": ["<keyword 1>", "<keyword 2>", "<keyword 3>"],
   "summary": "<2-3 sentence overall feedback>"
 }}
-
-Be specific, honest, and actionable. Focus on:
-- Clarity and impact of bullet points
-- Quantified achievements
-- ATS keyword optimization
-- Section completeness (summary, skills, experience, education, projects)
-- Formatting and length
 """
 
     try:
