@@ -1,14 +1,10 @@
 import json
-import streamlit as st
+import os
+from openai import OpenAI
 
 def analyze_resume(resume_text: str, job_role: str = "") -> dict:
-    
     try:
-        from openai import OpenAI
-        
-        KEY = "skproj3Eb012rKtvyHDE12Emq0AY6ccNdgG8w1oGJ_IwHKVq05inB2kVKyxBemIB7qptfGJlqwtitC0T3BlbkFJIkofKpZ1Jjcc5kXxf8m0JTkalTIXVQ9d_UosggzoZoJzs7w9ExTsULLqa4Bo0CBQfJV3rbgA"
-        
-        client = OpenAI(api_key=KEY)
+        client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
         
         job_context = f"The candidate is targeting a **{job_role}** role." if job_role else ""
 
