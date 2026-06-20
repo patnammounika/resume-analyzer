@@ -2,7 +2,7 @@ import json
 import os
 import streamlit as st
 from openai import OpenAI
-
+client = OpenAI(api_key="skproj3Eb012rKtvyHDE12Emq0AY6ccNdgG8w1oGJ_IwHKVq05inB2kVKyxBemIB7qptfGJlqwtitC0T3BlbkFJIkofKpZ1Jjcc5kXxf8m0JTkalTIXVQ9d_UosggzoZoJzs7w9ExTsULLqa4Bo0CBQfJV3rbgA")
 def analyze_resume(resume_text: str, job_role: str = "") -> dict:
     
     # Get API key from streamlit secrets or environment
