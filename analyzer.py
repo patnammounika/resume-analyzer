@@ -1,9 +1,6 @@
 import json
 import os
 from openai import OpenAI
-from dotenv import load_dotenv
-
-load_dotenv()
 
 def analyze_resume(resume_text: str, job_role: str = "") -> dict:
     try:
@@ -14,9 +11,7 @@ def analyze_resume(resume_text: str, job_role: str = "") -> dict:
 
         prompt = f"""
 You are an expert resume reviewer.
-
 {job_context}
-
 Resume:
 {resume_text}
 
@@ -32,18 +27,13 @@ Return ONLY valid JSON:
   "summary": ""
 }}
 """
-
         response = client.chat.completions.create(
             model="gpt-4o-mini",
-            messages=[
-                {"role": "user", "content": prompt}
-            ],
+            messages=[{"role": "user", "content": prompt}],
             temperature=0.3
         )
-
         raw = response.choices[0].message.content.strip()
         raw = raw.replace("```json", "").replace("```", "").strip()
-
         return json.loads(raw)
 
     except Exception as e:
