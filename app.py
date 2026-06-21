@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+load_dotenv()
 import streamlit as st
 import PyPDF2
 import docx2txt
