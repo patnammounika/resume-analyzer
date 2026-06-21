@@ -1,10 +1,12 @@
-from dotenv import load_dotenv
-load_dotenv()
 import streamlit as st
 import PyPDF2
 import docx2txt
 import os
 from analyzer import analyze_resume
+
+# Load API key
+if "OPENAI_API_KEY" in st.secrets:
+    os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 
 st.set_page_config(
     page_title="AI Resume Analyzer",
@@ -18,20 +20,18 @@ st.markdown("""
         .sub-title  { font-size: 1rem; color: #555; margin-bottom: 1.5rem; }
         .section-header { font-size: 1.1rem; font-weight: 600; color: #1A56A0;
                           border-bottom: 2px solid #1A56A0; padding-bottom: 4px; margin-top: 1.5rem; }
-        .score-box { background: #f0f4ff; border-radius: 10px; padding: 1rem;
-                     text-align: center; font-size: 2.5rem; font-weight: 700; color: #1A56A0; }
     </style>
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="main-title">📄 AI Resume Analyzer</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">Upload your resume and get instant AI-powered feedback to improve your chances.</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">Upload your resume and get instant AI-powered feedback.</div>', unsafe_allow_html=True)
 
 with st.sidebar:
     st.header("⚙️ Settings")
     job_role = st.text_input("Target Job Role (optional)", placeholder="e.g. Software Engineer")
     st.markdown("---")
     st.markdown("**Supported formats:** PDF, DOCX, TXT")
-    st.markdown("**Powered by:** OpenAI GPT-4o")
+    st.markdown("**Powered by:** OpenAI GPT-4o Mini")
 
 uploaded_file = st.file_uploader("Upload Your Resume", type=["pdf", "docx", "txt"])
 
@@ -45,12 +45,33 @@ def extract_text(file):
         return file.read().decode("utf-8")
     return ""
 
+def format_report(result, filename):
+    lines = [
+        "RESUME ANALYSIS REPORT",
+        f"File: {filename}",
+        "=" * 50,
+        f"Overall Score     : {result.get('score', 'N/A')}/10",
+        f"ATS Compatibility : {result.get('ats_score', 'N/A')}",
+        f"Completeness      : {result.get('completeness', 'N/A')}",
+        "\nSTRENGTHS:",
+        *[f"  + {s}" for s in result.get("strengths", [])],
+        "\nAREAS TO IMPROVE:",
+        *[f"  - {w}" for w in result.get("weaknesses", [])],
+        "\nRECOMMENDATIONS:",
+        *[f"  * {r}" for r in result.get("recommendations", [])],
+        "\nMISSING KEYWORDS:",
+        f"  {', '.join(result.get('missing_keywords', []))}",
+        "\nSUMMARY:",
+        f"  {result.get('summary', '')}",
+    ]
+    return "\n".join(lines)
+
 if uploaded_file:
     with st.spinner("Reading your resume..."):
         resume_text = extract_text(uploaded_file)
 
     if not resume_text.strip():
-        st.error("Could not extract text from your file. Please try a different format.")
+        st.error("Could not extract text. Please try a different format.")
     else:
         st.success(f"✅ Resume loaded: **{uploaded_file.name}**")
 
@@ -58,7 +79,7 @@ if uploaded_file:
             st.text_area("Resume Content", resume_text, height=200)
 
         if st.button("🔍 Analyze Resume", use_container_width=True, type="primary"):
-            with st.spinner("Analyzing with AI... this may take a few seconds"):
+            with st.spinner("Analyzing with AI..."):
                 result = analyze_resume(resume_text, job_role)
 
             if "error" in result:
@@ -98,29 +119,8 @@ if uploaded_file:
                 st.info(result.get("summary", ""))
 
                 st.download_button(
-                    label="📥 Download Report as Text",
+                    label="📥 Download Report",
                     data=format_report(result, uploaded_file.name),
                     file_name="resume_analysis_report.txt",
                     mime="text/plain"
                 )
-
-def format_report(result, filename):
-    lines = [
-        f"RESUME ANALYSIS REPORT",
-        f"File: {filename}",
-        f"{'='*50}",
-        f"Overall Score     : {result.get('score', 'N/A')}/10",
-        f"ATS Compatibility : {result.get('ats_score', 'N/A')}",
-        f"Completeness      : {result.get('completeness', 'N/A')}",
-        f"\nSTRENGTHS:",
-        *[f"  + {s}" for s in result.get("strengths", [])],
-        f"\nAREAS TO IMPROVE:",
-        *[f"  - {w}" for w in result.get("weaknesses", [])],
-        f"\nRECOMMENDATIONS:",
-        *[f"  * {r}" for r in result.get("recommendations", [])],
-        f"\nMISSING KEYWORDS:",
-        f"  {', '.join(result.get('missing_keywords', []))}",
-        f"\nSUMMARY:",
-        f"  {result.get('summary', '')}",
-    ]
-    return "\n".join(lines)
