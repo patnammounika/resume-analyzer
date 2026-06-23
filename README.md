@@ -111,7 +111,7 @@ resume-analyzer/
 ## 👩‍💻 Author
 
 **Mounika Patnam**  
-Application Support Engineer | Python | AWS | GenAI  
+ Python | AWS | GenAI  
 [LinkedIn](https://linkedin.com/in/mounika-patnam) | [GitHub](https://github.com/patnammounika)
 
 ---
