@@ -1,47 +1,41 @@
 import json
 import os
 import streamlit as st
-import anthropic
+from openai import OpenAI
 
 def analyze_resume(resume_text: str, job_role: str = "") -> dict:
     try:
-        # Streamlit Cloud secrets first, fallback to env
-        api_key = st.secrets.get("ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
-        client = anthropic.Anthropic(api_key=api_key)
+        # Streamlit Cloud secrets first, fallback to env variable
+        api_key = st.secrets.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
+        client = OpenAI(api_key=api_key)
 
         job_context = f"The candidate is targeting a {job_role} role." if job_role else ""
 
         prompt = f"""
-You are an expert resume reviewer and career coach. Analyze the resume below.
-
+You are an expert resume reviewer.
 {job_context}
-
 Resume:
-\"\"\"
 {resume_text}
-\"\"\"
 
-Return ONLY valid JSON (no markdown, no explanation):
+Return ONLY valid JSON:
 {{
-  "score": <integer 1-10>,
-  "ats_score": "<Poor/Fair/Good/Excellent>",
-  "completeness": "<Incomplete/Partial/Complete>",
-  "strengths": ["<strength 1>", "<strength 2>", "<strength 3>"],
-  "weaknesses": ["<weakness 1>", "<weakness 2>", "<weakness 3>"],
-  "recommendations": ["<tip 1>", "<tip 2>", "<tip 3>", "<tip 4>"],
-  "missing_keywords": ["<keyword 1>", "<keyword 2>", "<keyword 3>"],
-  "summary": "<2-3 sentence overall feedback>"
+  "score": 1-10,
+  "ats_score": "",
+  "completeness": "",
+  "strengths": [],
+  "weaknesses": [],
+  "recommendations": [],
+  "missing_keywords": [],
+  "summary": ""
 }}
 """
-        response = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=1024,
-            messages=[{"role": "user", "content": prompt}]
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3
         )
-
-        raw = response.content[0].text.strip()
+        raw = response.choices[0].message.content.strip()
         raw = raw.replace("```json", "").replace("```", "").strip()
         return json.loads(raw)
-
     except Exception as e:
         return {"error": str(e)}
