@@ -1,10 +1,12 @@
 import json
 import os
+import streamlit as st
 from openai import OpenAI
 
 def analyze_resume(resume_text: str, job_role: str = "") -> dict:
     try:
-        api_key = os.getenv("OPENAI_API_KEY")
+        # Streamlit Cloud secrets first, fallback to env variable
+        api_key = st.secrets.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
         client = OpenAI(api_key=api_key)
 
         job_context = f"The candidate is targeting a {job_role} role." if job_role else ""
@@ -35,6 +37,5 @@ Return ONLY valid JSON:
         raw = response.choices[0].message.content.strip()
         raw = raw.replace("```json", "").replace("```", "").strip()
         return json.loads(raw)
-
     except Exception as e:
         return {"error": str(e)}
